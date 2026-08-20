@@ -347,8 +347,8 @@
                     this.modal.title = '刪除整個品牌？';
                     this.modal.message = `確定要刪除品牌「${brand}」及其所有庫存嗎？此操作無法復原。`;
                     this.modal.action = async () => {
-                        // Optimistic UI: 先從畫面上移除
-                        this.gels = this.gels.filter(g => g.brand !== brand);
+                        // 強制轉字串比對，並使用擴展運算符確保觸發響應式
+                        this.gels = [...this.gels.filter(g => String(g.brand) !== String(brand))];
                         try {
                             await fetch(GAS_URL, {
                                 method: 'POST',
@@ -364,8 +364,8 @@
                     this.modal.title = '刪除這筆庫存？';
                     this.modal.message = '確定要刪除這筆紀錄嗎？此操作無法復原。';
                     this.modal.action = async () => {
-                        // Optimistic UI: 先從畫面上移除
-                        this.gels = this.gels.filter(g => g.id !== id);
+                        // 強制轉字串比對，並使用擴展運算符確保觸發響應式
+                        this.gels = [...this.gels.filter(g => String(g.id) !== String(id))];
                         try {
                             await fetch(GAS_URL, {
                                 method: 'POST',
@@ -389,10 +389,12 @@
                     let finalYears = this.editForm.exp_type === 'other' ? this.editForm.custom_exp : parseInt(this.editForm.exp_type);
                     const payload = { ...this.editForm, exp_years: finalYears, _action: 'UPDATE', id: this.editingId };
                     
-                    // Optimistic UI
-                    let index = this.gels.findIndex(g => g.id === this.editingId);
+                    // Optimistic UI: 建立新陣列賦值以確保 Alpine 捕捉變更
+                    let index = this.gels.findIndex(g => String(g.id) === String(this.editingId));
                     if (index !== -1) {
-                        this.gels[index] = this.formatGel({ ...this.gels[index], ...this.editForm, exp_years: finalYears });
+                        let newGels = [...this.gels];
+                        newGels[index] = this.formatGel({ ...newGels[index], ...this.editForm, exp_years: finalYears });
+                        this.gels = newGels;
                     }
                     this.editingId = null;
                     
