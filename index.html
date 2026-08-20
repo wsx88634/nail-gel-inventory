@@ -19,6 +19,10 @@
         .btn-icon {
             @apply p-1.5 bg-white border border-slate-200 rounded-lg shadow-sm transition hover:shadow active:scale-95 flex items-center justify-center;
         }
+        /* 給店內編碼用的自訂顏色小圓角 */
+        input[type="color"] {
+            @apply border-slate-200 rounded-lg border cursor-pointer p-0.5 bg-slate-50 h-[38px] w-full;
+        }
     </style>
 </head>
 <body class="bg-slate-100/50 text-slate-800 font-sans antialiased pb-24">
@@ -44,23 +48,36 @@
                         <label>品牌名稱</label>
                         <input type="text" x-model="formData.brand" id="brand_input" required class="w-full" placeholder="例如: Presto">
                     </div>
-                    <div class="sm:col-span-3">
-                        <label>店內編碼</label>
-                        <input type="text" x-model="formData.shop_code" id="shop_code_input" required class="w-full" placeholder="例如: A01">
+                    
+                    <!-- 店內編碼與底色選擇 -->
+                    <div class="sm:col-span-5 border-l-2 border-slate-100 pl-4 sm:pl-5">
+                        <label>店內編碼 (分類標籤) 與底色</label>
+                        <div class="flex space-x-2">
+                            <input type="text" x-model="formData.shop_code" id="shop_code_input" class="flex-1" placeholder="例如: 貓眼, 純色, A01...">
+                            <input type="color" x-model="formData.hex_color" class="w-12 shrink-0" title="選擇標籤底色">
+                        </div>
+                        <!-- 快速選擇歷史標籤 -->
+                        <div class="flex flex-wrap gap-1.5 mt-2" x-show="availableShopCodes.length > 0">
+                            <template x-for="tag in availableShopCodes" :key="tag.code">
+                                <button type="button" @click="formData.shop_code = tag.code; formData.hex_color = tag.color"
+                                    class="text-[10px] px-2 py-0.5 rounded shadow-sm text-white transition hover:scale-105 active:scale-95"
+                                    :style="`background-color: ${tag.color}`"
+                                    x-text="tag.code">
+                                </button>
+                            </template>
+                        </div>
                     </div>
+
                     <div class="sm:col-span-4">
                         <label>色號</label>
                         <input type="text" x-model="formData.color_name" required class="w-full" placeholder="例如: #214">
-                    </div>
-                    <div class="sm:col-span-2">
-                        <label>預覽色</label>
-                        <input type="color" x-model="formData.hex_color" class="w-full h-[38px] border-slate-200 rounded-lg border cursor-pointer p-0.5 bg-slate-50">
                     </div>
                     
                     <div class="sm:col-span-4">
                         <label>製造日期</label>
                         <input type="date" x-model="formData.mfg_date" required class="w-full">
                     </div>
+                    
                     <div class="sm:col-span-8">
                         <label>有效年限</label>
                         <div class="flex flex-col sm:flex-row sm:items-center space-y-3 sm:space-y-0 sm:space-x-6 mt-1.5">
@@ -82,8 +99,9 @@
                     </div>
                 </div>
                 <div class="pt-2">
-                    <button type="submit" class="w-full sm:w-auto btn-primary">
-                        加入庫存清單
+                    <button type="submit" class="w-full sm:w-auto btn-primary relative">
+                        <span x-show="!isSubmitting">加入庫存清單</span>
+                        <span x-show="isSubmitting">新增中...</span>
                     </button>
                 </div>
             </form>
@@ -115,7 +133,7 @@
                                 </button>
                                 <span class="bg-slate-200/70 text-slate-600 text-[11px] py-0.5 px-2.5 rounded-full font-bold" x-text="gels.length"></span>
                             </div>
-                            <div class="flex items-center space-x-6"> <!-- 增加間距防止誤按 -->
+                            <div class="flex items-center space-x-6">
                                 <button @click.stop="quickAdd(brand)" class="btn-icon text-teal-600 hover:bg-teal-50 hover:border-teal-200" title="在此品牌新增品項">
                                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
                                 </button>
@@ -127,23 +145,26 @@
                         
                         <!-- 品項列表 (強制一行顯示) -->
                         <div x-show="expanded" x-collapse x-transition class="space-y-3 overflow-x-auto pb-1">
-                            <div class="min-w-[700px]"> <!-- 確保在小螢幕時也能排在同一行，透過左右滑動觀看，或者強制縮小 -->
+                            <div class="min-w-[700px]">
                                 <template x-for="gel in gels" :key="gel.id">
                                     <div class="bg-white rounded-xl shadow-sm border border-slate-200/70 hover:shadow transition relative mb-3 group">
-                                        <!-- 正常顯示模式 (強制一行 flex-row) -->
+                                        <!-- 正常顯示模式 -->
                                         <div x-show="editingId !== gel.id" class="px-5 py-3.5 flex items-center justify-between" :class="{'bg-rose-50/40': gel.is_warning}">
                                             
-                                            <!-- 左側：識別 -->
-                                            <div class="flex items-center space-x-3 w-[25%] shrink-0">
-                                                <div class="w-8 h-8 rounded-full shadow-inner border border-slate-200/50 flex-shrink-0" :style="`background-color: ${gel.hex_color}`"></div>
+                                            <!-- 左側：識別 (移除圓形色塊，只留色號跟標籤) -->
+                                            <div class="flex items-center space-x-3 w-[30%] shrink-0">
                                                 <div class="font-bold text-slate-800 flex items-center space-x-2 text-[15px]">
-                                                    <span x-text="gel.shop_code" class="text-[11px] bg-slate-100 text-slate-500 border border-slate-200 rounded px-1.5 py-0.5"></span>
+                                                    <!-- 店內編碼變成自訂底色的卡片 -->
+                                                    <span x-show="gel.shop_code" x-text="gel.shop_code" 
+                                                          class="text-xs px-2 py-0.5 rounded shadow-sm text-white"
+                                                          :style="`background-color: ${gel.hex_color || '#94a3b8'}`">
+                                                    </span>
                                                     <span x-text="gel.color_name" class="tracking-wide whitespace-nowrap"></span>
                                                 </div>
                                             </div>
                                             
                                             <!-- 中間：詳細資訊 -->
-                                            <div class="flex items-center space-x-8 text-sm text-slate-500 w-[45%] shrink-0 pl-4">
+                                            <div class="flex items-center space-x-8 text-sm text-slate-500 w-[40%] shrink-0 pl-4">
                                                 <div class="flex items-center space-x-1.5 whitespace-nowrap">
                                                     <svg class="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                                                     <span>製造: <span x-text="gel.mfg_date"></span></span>
@@ -160,13 +181,11 @@
                                                 <span x-text="gel.exp_date"></span> 到期
                                             </div>
 
-                                            <!-- 按鈕操作區 (扳手與垃圾桶) -->
+                                            <!-- 按鈕操作區 -->
                                             <div class="flex items-center space-x-2 shrink-0">
-                                                <!-- 編輯：扳手圖示 -->
                                                 <button @click.stop="startEdit(gel)" class="btn-icon text-teal-600 hover:bg-teal-50 border-transparent shadow-none hover:shadow-sm" title="編輯">
                                                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.121 14.121L19 19m-7-7l-7-7m0 0l2.828-2.828a2 2 0 012.828 0l1.414 1.414a2 2 0 010 2.828l-1.414 1.414a2 2 0 01-2.828 0L5.343 5.343a2 2 0 010-2.828L8.172 2.515M14.121 14.121l2.828-2.828m0 0l1.414 1.414a2 2 0 010 2.828l-2.828 2.828a2 2 0 01-2.828 0L14.121 14.121z"></path></svg>
                                                 </button>
-                                                <!-- 刪除：垃圾桶圖示 -->
                                                 <button @click.stop="confirmDeleteGel(gel.id)" class="btn-icon text-slate-400 hover:text-rose-500 hover:bg-rose-50 border-transparent shadow-none hover:shadow-sm" title="刪除">
                                                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                                                 </button>
@@ -181,17 +200,16 @@
                                                     <label>品牌</label>
                                                     <input type="text" x-model="editForm.brand" class="w-full !bg-white">
                                                 </div>
-                                                <div class="sm:col-span-2">
-                                                    <label>店內編碼</label>
-                                                    <input type="text" x-model="editForm.shop_code" class="w-full !bg-white">
+                                                <div class="sm:col-span-5 border-l-2 border-teal-100 pl-4">
+                                                    <label>店內編碼 (分類標籤) 與底色</label>
+                                                    <div class="flex space-x-2">
+                                                        <input type="text" x-model="editForm.shop_code" class="flex-1 !bg-white">
+                                                        <input type="color" x-model="editForm.hex_color" class="w-12 shrink-0 !bg-white">
+                                                    </div>
                                                 </div>
-                                                <div class="sm:col-span-3">
+                                                <div class="sm:col-span-4">
                                                     <label>色號</label>
                                                     <input type="text" x-model="editForm.color_name" class="w-full !bg-white">
-                                                </div>
-                                                <div class="sm:col-span-2">
-                                                    <label>預覽色</label>
-                                                    <input type="color" x-model="editForm.hex_color" class="w-full h-[38px] border-slate-200 rounded-lg border cursor-pointer p-0.5 bg-white">
                                                 </div>
                                                 <div class="sm:col-span-4">
                                                     <label>製造日期</label>
@@ -253,11 +271,12 @@
         document.addEventListener('alpine:init', () => {
             Alpine.data('appData', () => ({
                 gels: [],
+                isSubmitting: false,
                 formData: {
                     brand: '',
                     shop_code: '',
                     color_name: '',
-                    hex_color: '#ffb6c1',
+                    hex_color: '#f59e0b', // 預設給個可愛的橘黃色標籤底色
                     mfg_date: new Date().toISOString().split('T')[0],
                     exp_type: '3',
                     custom_exp: 3
@@ -289,6 +308,17 @@
                     }, {});
                 },
                 
+                get availableShopCodes() {
+                    let codes = {};
+                    this.gels.forEach(g => {
+                        if (g.shop_code && !codes[g.shop_code]) {
+                            codes[g.shop_code] = g.hex_color || '#94a3b8';
+                        }
+                    });
+                    // 轉成陣列回傳，方便渲染
+                    return Object.entries(codes).map(([code, color]) => ({code, color}));
+                },
+                
                 formatGel(gel) {
                     let mfg = new Date(gel.mfg_date);
                     let formattedMfg = gel.mfg_date;
@@ -314,27 +344,42 @@
                 },
                 
                 async submitForm() {
+                    if(this.isSubmitting) return;
+                    this.isSubmitting = true;
+                    
                     let finalYears = this.formData.exp_type === 'other' ? this.formData.custom_exp : parseInt(this.formData.exp_type);
                     const payload = { ...this.formData, exp_years: finalYears, _action: 'CREATE' };
                     
-                    // Optimistic UI: 先在畫面上產生一筆暫存的，或者等待成功後直接 push，避免等待 fetchGels
+                    // 終極樂觀更新：完全不等待 fetch，直接丟進 gels 陣列中！
+                    const tempId = Date.now().toString();
+                    let newGel = this.formatGel({
+                        ...this.formData,
+                        exp_years: finalYears,
+                        id: tempId
+                    });
+                    
+                    // 展開確保觸發畫面更新
+                    this.gels = [...this.gels, newGel];
+                    
+                    // 清空表單，但保留 brand 和標籤顏色方便連續新增
+                    this.formData.shop_code = '';
+                    this.formData.color_name = '';
+                    
+                    // 背景連線
                     try {
                         const res = await fetch(GAS_URL, {
                             method: 'POST',
                             headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                             body: JSON.stringify(payload)
                         });
-                        if (res.ok) {
-                            const result = await res.json();
-                            this.gels.push(this.formatGel({
-                                ...this.formData,
-                                exp_years: finalYears,
-                                id: result.id || Date.now().toString()
-                            }));
-                            this.formData.shop_code = '';
-                            this.formData.color_name = '';
-                        }
-                    } catch (err) { console.error('新增失敗', err); }
+                        // 就算沒等到 id 也沒關係，反正重新整理或下次撈資料就會有真正的 id
+                    } catch (err) { 
+                        console.error('新增失敗', err);
+                        // 如果失敗，可以把剛才新增的拿掉
+                        this.gels = this.gels.filter(g => g.id !== tempId);
+                    } finally {
+                        this.isSubmitting = false;
+                    }
                 },
                 
                 quickAdd(brand) {
@@ -347,10 +392,11 @@
                     this.modal.title = '刪除整個品牌？';
                     this.modal.message = `確定要刪除品牌「${brand}」及其所有庫存嗎？此操作無法復原。`;
                     this.modal.action = async () => {
-                        // 強制轉字串比對，並使用擴展運算符確保觸發響應式
+                        // 完全樂觀更新：立刻移除，不等伺服器！
                         this.gels = [...this.gels.filter(g => String(g.brand) !== String(brand))];
+                        
                         try {
-                            await fetch(GAS_URL, {
+                            fetch(GAS_URL, {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                                 body: JSON.stringify({ _action: 'DELETE_BRAND', brand: brand })
@@ -364,10 +410,11 @@
                     this.modal.title = '刪除這筆庫存？';
                     this.modal.message = '確定要刪除這筆紀錄嗎？此操作無法復原。';
                     this.modal.action = async () => {
-                        // 強制轉字串比對，並使用擴展運算符確保觸發響應式
+                        // 完全樂觀更新：立刻移除，不等伺服器！
                         this.gels = [...this.gels.filter(g => String(g.id) !== String(id))];
+                        
                         try {
-                            await fetch(GAS_URL, {
+                            fetch(GAS_URL, {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                                 body: JSON.stringify({ _action: 'DELETE_GEL', id: id })
@@ -389,7 +436,7 @@
                     let finalYears = this.editForm.exp_type === 'other' ? this.editForm.custom_exp : parseInt(this.editForm.exp_type);
                     const payload = { ...this.editForm, exp_years: finalYears, _action: 'UPDATE', id: this.editingId };
                     
-                    // Optimistic UI: 建立新陣列賦值以確保 Alpine 捕捉變更
+                    // 完全樂觀更新：立刻覆寫陣列，不等伺服器！
                     let index = this.gels.findIndex(g => String(g.id) === String(this.editingId));
                     if (index !== -1) {
                         let newGels = [...this.gels];
@@ -399,7 +446,7 @@
                     this.editingId = null;
                     
                     try {
-                        await fetch(GAS_URL, {
+                        fetch(GAS_URL, {
                             method: 'POST',
                             headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                             body: JSON.stringify(payload)
