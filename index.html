@@ -289,46 +289,35 @@
                     }, {});
                 },
                 
+                formatGel(gel) {
+                    let mfg = new Date(gel.mfg_date);
+                    let formattedMfg = gel.mfg_date;
+                    let formattedExp = '';
+                    let isWarning = false;
+                    
+                    if (!isNaN(mfg.getTime())) {
+                        formattedMfg = mfg.getFullYear() + '-' + String(mfg.getMonth() + 1).padStart(2, '0') + '-' + String(mfg.getDate()).padStart(2, '0');
+                        let exp = new Date(mfg.setFullYear(mfg.getFullYear() + parseInt(gel.exp_years)));
+                        formattedExp = exp.getFullYear() + '-' + String(exp.getMonth() + 1).padStart(2, '0') + '-' + String(exp.getDate()).padStart(2, '0');
+                        let daysToExp = Math.floor((exp - new Date()) / (1000 * 60 * 60 * 24));
+                        isWarning = daysToExp <= 30;
+                    }
+                    return { ...gel, mfg_date: formattedMfg, exp_date: formattedExp, is_warning: isWarning };
+                },
+                
                 async fetchGels() {
                     try {
-                        // 加上時間戳防止瀏覽器快取 (徹底解決刪除後畫面殘留問題)
                         const res = await fetch(GAS_URL + '?t=' + new Date().getTime());
                         const data = await res.json();
-                        
-                        // 前端計算到期日，因為現在後端是純 Google Sheet
-                        this.gels = data.map(gel => {
-                            let mfg = new Date(gel.mfg_date);
-                            let formattedMfg = gel.mfg_date;
-                            let formattedExp = '';
-                            let isWarning = false;
-                            
-                            if (!isNaN(mfg.getTime())) {
-                                // 取得本地時間的 YYYY-MM-DD，去除多餘的時區尾巴 (如 T16:00:00.000Z)
-                                formattedMfg = mfg.getFullYear() + '-' + String(mfg.getMonth() + 1).padStart(2, '0') + '-' + String(mfg.getDate()).padStart(2, '0');
-                                
-                                let exp = new Date(mfg.setFullYear(mfg.getFullYear() + parseInt(gel.exp_years)));
-                                formattedExp = exp.getFullYear() + '-' + String(exp.getMonth() + 1).padStart(2, '0') + '-' + String(exp.getDate()).padStart(2, '0');
-                                
-                                let daysToExp = Math.floor((exp - new Date()) / (1000 * 60 * 60 * 24));
-                                isWarning = daysToExp <= 30;
-                            }
-                            
-                            return {
-                                ...gel,
-                                mfg_date: formattedMfg,
-                                exp_date: formattedExp,
-                                is_warning: isWarning
-                            };
-                        });
-                    } catch (err) {
-                        console.error('取得資料失敗', err);
-                    }
+                        this.gels = data.map(gel => this.formatGel(gel));
+                    } catch (err) { console.error('取得資料失敗', err); }
                 },
                 
                 async submitForm() {
                     let finalYears = this.formData.exp_type === 'other' ? this.formData.custom_exp : parseInt(this.formData.exp_type);
                     const payload = { ...this.formData, exp_years: finalYears, _action: 'CREATE' };
                     
+                    // Optimistic UI: 先在畫面上產生一筆暫存的，或者等待成功後直接 push，避免等待 fetchGels
                     try {
                         const res = await fetch(GAS_URL, {
                             method: 'POST',
@@ -336,7 +325,12 @@
                             body: JSON.stringify(payload)
                         });
                         if (res.ok) {
-                            await this.fetchGels();
+                            const result = await res.json();
+                            this.gels.push(this.formatGel({
+                                ...this.formData,
+                                exp_years: finalYears,
+                                id: result.id || Date.now().toString()
+                            }));
                             this.formData.shop_code = '';
                             this.formData.color_name = '';
                         }
@@ -353,13 +347,14 @@
                     this.modal.title = '刪除整個品牌？';
                     this.modal.message = `確定要刪除品牌「${brand}」及其所有庫存嗎？此操作無法復原。`;
                     this.modal.action = async () => {
+                        // Optimistic UI: 先從畫面上移除
+                        this.gels = this.gels.filter(g => g.brand !== brand);
                         try {
-                            const res = await fetch(GAS_URL, {
+                            await fetch(GAS_URL, {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                                 body: JSON.stringify({ _action: 'DELETE_BRAND', brand: brand })
                             });
-                            if (res.ok) await this.fetchGels();
                         } catch (err) { console.error(err); }
                     };
                     this.modal.isOpen = true;
@@ -369,13 +364,14 @@
                     this.modal.title = '刪除這筆庫存？';
                     this.modal.message = '確定要刪除這筆紀錄嗎？此操作無法復原。';
                     this.modal.action = async () => {
+                        // Optimistic UI: 先從畫面上移除
+                        this.gels = this.gels.filter(g => g.id !== id);
                         try {
-                            const res = await fetch(GAS_URL, {
+                            await fetch(GAS_URL, {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                                 body: JSON.stringify({ _action: 'DELETE_GEL', id: id })
                             });
-                            if (res.ok) await this.fetchGels();
                         } catch (err) { console.error(err); }
                     };
                     this.modal.isOpen = true;
@@ -384,11 +380,7 @@
                 startEdit(gel) {
                     this.editingId = gel.id;
                     let type = [3, 5].includes(parseInt(gel.exp_years)) ? String(gel.exp_years) : 'other';
-                    this.editForm = {
-                        ...gel,
-                        exp_type: type,
-                        custom_exp: type === 'other' ? gel.exp_years : 3
-                    };
+                    this.editForm = { ...gel, exp_type: type, custom_exp: type === 'other' ? gel.exp_years : 3 };
                 },
                 
                 cancelEdit() { this.editingId = null; },
@@ -397,16 +389,19 @@
                     let finalYears = this.editForm.exp_type === 'other' ? this.editForm.custom_exp : parseInt(this.editForm.exp_type);
                     const payload = { ...this.editForm, exp_years: finalYears, _action: 'UPDATE', id: this.editingId };
                     
+                    // Optimistic UI
+                    let index = this.gels.findIndex(g => g.id === this.editingId);
+                    if (index !== -1) {
+                        this.gels[index] = this.formatGel({ ...this.gels[index], ...this.editForm, exp_years: finalYears });
+                    }
+                    this.editingId = null;
+                    
                     try {
-                        const res = await fetch(GAS_URL, {
+                        await fetch(GAS_URL, {
                             method: 'POST',
                             headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                             body: JSON.stringify(payload)
                         });
-                        if (res.ok) {
-                            await this.fetchGels();
-                            this.editingId = null;
-                        }
                     } catch (err) { console.error(err); }
                 }
             }))
