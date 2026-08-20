@@ -21,7 +21,7 @@
         }
         /* 給店內編碼用的自訂顏色小圓角 */
         input[type="color"] {
-            @apply border-slate-200 rounded-lg border cursor-pointer p-0.5 bg-slate-50 h-[38px] w-full;
+            @apply border-slate-200 rounded-lg border cursor-pointer p-0.5 bg-slate-50 h-[38px];
         }
     </style>
 </head>
@@ -56,13 +56,13 @@
                             <input type="text" x-model="formData.shop_code" id="shop_code_input" class="flex-1" placeholder="例如: 貓眼, 純色, A01...">
                             <input type="color" x-model="formData.hex_color" class="w-12 shrink-0" title="選擇標籤底色">
                         </div>
-                        <!-- 快速選擇歷史標籤 -->
-                        <div class="flex flex-wrap gap-1.5 mt-2" x-show="availableShopCodes.length > 0">
-                            <template x-for="tag in availableShopCodes" :key="tag.code">
+                        <!-- 快速選擇歷史標籤 (最多10個，每排5個) -->
+                        <div class="grid grid-cols-5 gap-1.5 mt-2" x-show="availableShopCodes.length > 0">
+                            <template x-for="tag in availableShopCodes.slice(0, 10)" :key="tag.code">
                                 <button type="button" @click="formData.shop_code = tag.code; formData.hex_color = tag.color"
-                                    class="text-[10px] px-2 py-0.5 rounded shadow-sm text-white transition hover:scale-105 active:scale-95"
+                                    class="text-[11px] font-medium px-1 py-1 rounded shadow-sm text-white transition hover:scale-105 active:scale-95 truncate w-full"
                                     :style="`background-color: ${tag.color}`"
-                                    x-text="tag.code">
+                                    x-text="tag.code" :title="tag.code">
                                 </button>
                             </template>
                         </div>
@@ -205,6 +205,16 @@
                                                     <div class="flex space-x-2">
                                                         <input type="text" x-model="editForm.shop_code" class="flex-1 !bg-white">
                                                         <input type="color" x-model="editForm.hex_color" class="w-12 shrink-0 !bg-white">
+                                                    </div>
+                                                    <!-- 快速選擇歷史標籤 (最多10個，每排5個) -->
+                                                    <div class="grid grid-cols-5 gap-1.5 mt-2" x-show="availableShopCodes.length > 0">
+                                                        <template x-for="tag in availableShopCodes.slice(0, 10)" :key="tag.code">
+                                                            <button type="button" @click="editForm.shop_code = tag.code; editForm.hex_color = tag.color"
+                                                                class="text-[11px] font-medium px-1 py-1 rounded shadow-sm text-white transition hover:scale-105 active:scale-95 truncate w-full"
+                                                                :style="`background-color: ${tag.color}`"
+                                                                x-text="tag.code" :title="tag.code">
+                                                            </button>
+                                                        </template>
                                                     </div>
                                                 </div>
                                                 <div class="sm:col-span-4">
