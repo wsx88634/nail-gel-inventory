@@ -344,7 +344,7 @@
                         let exp = new Date(mfg.setFullYear(mfg.getFullYear() + parseInt(gel.exp_years)));
                         formattedExp = exp.getFullYear() + '-' + String(exp.getMonth() + 1).padStart(2, '0') + '-' + String(exp.getDate()).padStart(2, '0');
                         let daysToExp = Math.floor((exp - new Date()) / (1000 * 60 * 60 * 24));
-                        isWarning = daysToExp <= 30;
+                        isWarning = daysToExp <= 90;
                     }
                     return { ...gel, mfg_date: formattedMfg, exp_date: formattedExp, is_warning: isWarning };
                 },
