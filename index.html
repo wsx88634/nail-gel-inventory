@@ -52,9 +52,11 @@
                     <!-- 店內編碼與底色選擇 -->
                     <div class="sm:col-span-5 border-l-2 border-slate-100 pl-4 sm:pl-5">
                         <label>店內編碼 (分類標籤) 與底色</label>
-                        <div class="flex space-x-2">
+                        <div class="flex space-x-2 items-center">
                             <input type="text" x-model="formData.shop_code" id="shop_code_input" class="flex-1" placeholder="例如: 貓眼, 純色, A01...">
-                            <input type="color" x-model="formData.hex_color" class="w-12 shrink-0" title="選擇標籤底色">
+                            <div style="width: 42px; height: 38px; flex-shrink: 0; border-radius: 8px; overflow: hidden; border: 1px solid #e2e8f0; background: #fff;">
+                                <input type="color" x-model="formData.hex_color" style="width: 150%; height: 150%; margin: -25%; cursor: pointer;" title="選擇標籤底色">
+                            </div>
                         </div>
                         <!-- 快速選擇歷史標籤 (最多10個，每排5個) -->
                         <div class="grid grid-cols-5 gap-1.5 mt-2" x-show="availableShopCodes.length > 0">
@@ -202,9 +204,11 @@
                                                 </div>
                                                 <div class="sm:col-span-5 border-l-2 border-teal-100 pl-4">
                                                     <label>店內編碼 (分類標籤) 與底色</label>
-                                                    <div class="flex space-x-2">
+                                                    <div class="flex space-x-2 items-center">
                                                         <input type="text" x-model="editForm.shop_code" class="flex-1 !bg-white">
-                                                        <input type="color" x-model="editForm.hex_color" class="w-12 shrink-0 !bg-white">
+                                                        <div style="width: 42px; height: 38px; flex-shrink: 0; border-radius: 8px; overflow: hidden; border: 1px solid #e2e8f0; background: #fff;">
+                                                            <input type="color" x-model="editForm.hex_color" style="width: 150%; height: 150%; margin: -25%; cursor: pointer;" title="選擇標籤底色">
+                                                        </div>
                                                     </div>
                                                     <!-- 快速選擇歷史標籤 (最多10個，每排5個) -->
                                                     <div class="grid grid-cols-5 gap-1.5 mt-2" x-show="availableShopCodes.length > 0">
