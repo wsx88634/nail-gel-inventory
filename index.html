@@ -298,13 +298,26 @@
                         // 前端計算到期日，因為現在後端是純 Google Sheet
                         this.gels = data.map(gel => {
                             let mfg = new Date(gel.mfg_date);
-                            let exp = new Date(mfg.setFullYear(mfg.getFullYear() + parseInt(gel.exp_years)));
-                            let daysToExp = Math.floor((exp - new Date()) / (1000 * 60 * 60 * 24));
+                            let formattedMfg = gel.mfg_date;
+                            let formattedExp = '';
+                            let isWarning = false;
+                            
+                            if (!isNaN(mfg.getTime())) {
+                                // 取得本地時間的 YYYY-MM-DD，去除多餘的時區尾巴 (如 T16:00:00.000Z)
+                                formattedMfg = mfg.getFullYear() + '-' + String(mfg.getMonth() + 1).padStart(2, '0') + '-' + String(mfg.getDate()).padStart(2, '0');
+                                
+                                let exp = new Date(mfg.setFullYear(mfg.getFullYear() + parseInt(gel.exp_years)));
+                                formattedExp = exp.getFullYear() + '-' + String(exp.getMonth() + 1).padStart(2, '0') + '-' + String(exp.getDate()).padStart(2, '0');
+                                
+                                let daysToExp = Math.floor((exp - new Date()) / (1000 * 60 * 60 * 24));
+                                isWarning = daysToExp <= 30;
+                            }
                             
                             return {
                                 ...gel,
-                                exp_date: exp.toISOString().split('T')[0],
-                                is_warning: daysToExp <= 30
+                                mfg_date: formattedMfg,
+                                exp_date: formattedExp,
+                                is_warning: isWarning
                             };
                         });
                     } catch (err) {
