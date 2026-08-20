@@ -9,9 +9,9 @@
 - 專案啟動：2026-08-20（初始化專案與需求確認）
 
 ## 目標與路線圖
-- [ ] 階段一：需求分析與庫存紀錄表格式設計
-- [ ] 階段二：實作庫存紀錄與管理功能
-- [ ] 階段三：測試與優化（如加上自動提醒或圖表分析）
+- [x] 階段一：需求分析與庫存紀錄表格式設計（Google Sheets 雲端資料庫）
+- [x] 階段二：實作庫存紀錄與管理功能（CRUD、標籤選色、手機端最佳化）
+- [x] 階段三：測試與優化（3個月即期提醒、終極樂觀更新、0秒刪除響應）
 
 ## 資料夾結構
 ```
@@ -26,7 +26,7 @@
 | 層級 | 平台 | 位置 | 讀取時機 |
 |------|------|------|---------|
 | L1 | 本地（GDrive） | `agents.md`＋`handoff.md` | 每個 session |
-| L2 | GitHub | [wsx88634/nail-gel-inventory](https://github.com/wsx88634/nail-gel-inventory) | 指定時 |
+| L2 | GitHub | 專案：[wsx88634/nail-gel-inventory](https://github.com/wsx88634/nail-gel-inventory) <br> 網頁：[手機版入口](https://wsx88634.github.io/nail-gel-inventory/) | 指定時 |
 | L3 | Obsidian | [美甲膠庫存紀錄表/專案工作流程.md](file:///G:/%E6%88%91%E7%9A%84%E9%9B%B2%E7%AB%AF%E7%A1%AC%E7%A2%9F/secondbrain/%E7%BE%8E%E7%94%B2%E8%86%A0%E5%BA%AB%E5%AD%98%E7%B4%80%E9%8C%84%E8%A1%A8/%E5%B0%88%E6%A1%88%E5%B7%A5%E4%BD%9C%E6%B5%81%E7%A8%8B.md) | 有需要時 |
 
 ## 工作約定
