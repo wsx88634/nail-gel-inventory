@@ -26,8 +26,8 @@
 | 層級 | 平台 | 位置 | 讀取時機 |
 |------|------|------|---------|
 | L1 | 本地（GDrive） | `agents.md`＋`handoff.md` | 每個 session |
-| L2 | GitHub | `wsx88634/nail-gel-inventory` | 指定時 |
-| L3 | Obsidian | `美甲膠庫存紀錄表/專案工作流程.md` | 有需要時 |
+| L2 | GitHub | [wsx88634/nail-gel-inventory](https://github.com/wsx88634/nail-gel-inventory) | 指定時 |
+| L3 | Obsidian | [美甲膠庫存紀錄表/專案工作流程.md](file:///G:/%E6%88%91%E7%9A%84%E9%9B%B2%E7%AB%AF%E7%A1%AC%E7%A2%9F/secondbrain/%E7%BE%8E%E7%94%B2%E8%86%A0%E5%BA%AB%E5%AD%98%E7%B4%80%E9%8C%84%E8%A1%A8/%E5%B0%88%E6%A1%88%E5%B7%A5%E4%BD%9C%E6%B5%81%E7%A8%8B.md) | 有需要時 |
 
 ## 工作約定
 - 任何 Agent、任何電腦：**開工先讀 `handoff.md`，收工必更新 `handoff.md`**
