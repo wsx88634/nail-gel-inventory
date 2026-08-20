@@ -8,7 +8,7 @@
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js"></script>
     <style type="text/tailwindcss">
         input[type="text"], input[type="date"], input[type="number"], select {
-            @apply border-slate-200/80 bg-slate-100 rounded-lg p-2 text-slate-700 text-sm transition focus:bg-slate-50 focus:ring-2 focus:ring-teal-100 focus:border-teal-400 outline-none;
+            @apply border border-slate-300 bg-slate-200/70 rounded-lg p-2.5 text-slate-800 font-medium text-sm transition focus:bg-white focus:ring-2 focus:ring-teal-400 focus:border-teal-500 outline-none;
         }
         label {
             @apply block text-xs font-semibold text-slate-500 tracking-wide mb-1.5;
@@ -200,12 +200,12 @@
                                             <div class="grid grid-cols-1 sm:grid-cols-12 gap-4">
                                                 <div class="sm:col-span-3">
                                                     <label>品牌</label>
-                                                    <input type="text" x-model="editForm.brand" class="w-full !bg-slate-100">
+                                                    <input type="text" x-model="editForm.brand" class="w-full !bg-slate-200/70">
                                                 </div>
                                                 <div class="sm:col-span-5 border-l-2 border-teal-100 pl-4">
                                                     <label>店內編碼 (分類標籤) 與底色</label>
                                                     <div class="flex space-x-2 items-center">
-                                                        <input type="text" x-model="editForm.shop_code" class="flex-1 !bg-slate-100">
+                                                        <input type="text" x-model="editForm.shop_code" class="flex-1 !bg-slate-200/70">
                                                         <div style="width: 42px; height: 38px; flex-shrink: 0; border-radius: 8px; overflow: hidden; border: 1px solid #e2e8f0; background: #fff;">
                                                             <input type="color" x-model="editForm.hex_color" style="width: 150%; height: 150%; margin: -25%; cursor: pointer;" title="選擇標籤底色">
                                                         </div>
@@ -223,11 +223,11 @@
                                                 </div>
                                                 <div class="sm:col-span-4">
                                                     <label>色號</label>
-                                                    <input type="text" x-model="editForm.color_name" class="w-full !bg-slate-100">
+                                                    <input type="text" x-model="editForm.color_name" class="w-full !bg-slate-200/70">
                                                 </div>
                                                 <div class="sm:col-span-4">
                                                     <label>製造日期</label>
-                                                    <input type="date" x-model="editForm.mfg_date" class="w-full !bg-slate-100">
+                                                    <input type="date" x-model="editForm.mfg_date" class="w-full !bg-slate-200/70">
                                                 </div>
                                                 <div class="sm:col-span-8 flex flex-col justify-center pt-5">
                                                     <div class="flex items-center space-x-4">
